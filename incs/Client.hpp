@@ -53,6 +53,7 @@ class Client
 	void setClientPass(){_pass = true;}
 	void SetIncrementInfo(){_info++;}
 	void setRegistrated(bool option){_registrated = option;}
+	void setInfo(int n){this->_info = n;}
 
 	int getNumberInfo(){return this->_info;}
 	bool getClientPass(){return this->_pass;}

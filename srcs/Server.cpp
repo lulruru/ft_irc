@@ -126,10 +126,12 @@ void Server::NewClientAccept(){
 	pollStruct.fd = incofd;
 	pollStruct.events = POLLIN;
 	pollStruct.revents = 0;
-	client.setRegistrated(false);
-	client.setFd(incofd);
-	client.setIpAdd(inet_ntoa(clientAddr.sin_addr)) ;// convertit ip adress en string
-	_clients[incofd] = client;
+	_clients.insert(std::make_pair(incofd, client));
+	_clients[incofd].setRegistrated(false);
+	_clients[incofd].setFd(incofd);
+	_clients[incofd].setIpAdd(inet_ntoa(clientAddr.sin_addr)) ;// convertit ip adress en string
+	_clients[incofd].setInfo(-1);
+	std::cout <<"test " <<  _clients[incofd].GetFd() << std::endl; 
 	_fds.push_back(pollStruct);
 	std::cout << "Client <" << incofd << "> Connected" << std::endl;
 }
