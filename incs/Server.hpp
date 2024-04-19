@@ -30,7 +30,7 @@
 #include <string>
 #include <sstream>
 #include "ErrorMessage.hpp"
-
+#include "map"
 class Server
 {
 	public:
@@ -62,6 +62,6 @@ class Server
 	std::string _password;
 	int _fdSocket;
 	static bool _signal;
-	std::vector<Client> _clients;
+	std::map<int, Client> _clients;
 	std::vector<struct pollfd> _fds;
 };

@@ -52,13 +52,13 @@ class Client
 	void setClientNickname(std::string name){nickname = name;}
 	void setClientPass(){_pass = true;}
 	void SetIncrementInfo(){_info++;}
-	void setRegistrated(){_registrated = true;}
+	void setRegistrated(bool option){_registrated = option;}
 
 	int getNumberInfo(){return this->_info;}
 	bool getClientPass(){return this->_pass;}
 	std::string getClientUserName(){return this->username;}
 	std::string getClientNickName(){return this->nickname;}
-	bool getClientRegistratedInfo(){return this->_registrated;}
+	bool getClientRegistratedInfo(){return _registrated;}
 	// Méthodes
 	void parser();
 	

@@ -16,8 +16,8 @@
 /*                     Constructeurs & Destructeurs                   		  */
 /* ************************************************************************** */
 
-Client::Client() {
-	_registrated = false;
+Client::Client(): _registrated(false) {
+	std::cout << "Constructor called" << std::endl;
 	_pass = false;
 	_info = -1;
 }

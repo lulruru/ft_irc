@@ -46,11 +46,11 @@ void Server::ClearClients(int fd)
 			_fds.erase(_fds.begin() + i);
 			break;
 		}
-	for(size_t i = 0 ; i < _clients.size(); i++)
-		if(_clients[i].GetFd() == fd){
-			_clients.erase(_clients.begin() + i);
-			break;
-		}
+	std::map<int, Client>::iterator it = _clients.find(fd);
+    if (it != _clients.end()) {
+        _clients.erase(it);
+    }
+
 }
 
 void Server::SignalHandler(int signum)
@@ -126,9 +126,10 @@ void Server::NewClientAccept(){
 	pollStruct.fd = incofd;
 	pollStruct.events = POLLIN;
 	pollStruct.revents = 0;
+	client.setRegistrated(false);
 	client.setFd(incofd);
 	client.setIpAdd(inet_ntoa(clientAddr.sin_addr)) ;// convertit ip adress en string
-	_clients.push_back(client);
+	_clients[incofd] = client;
 	_fds.push_back(pollStruct);
 	std::cout << "Client <" << incofd << "> Connected" << std::endl;
 }
@@ -145,58 +146,59 @@ std::vector<std::string> split(const std::string& s, const std::string& delimite
         end = s.find_first_of(delimiters, start);
         tokens.push_back(s.substr(start, end - start));
     }
-
     return tokens;
 }
+
 void Server::registration(int fd, std::string buff)
 {
 	std::vector<std::string> splitted = split(buff, "\r\n");
 	std::cout << splitted.size() << std::endl;
-	(void)fd;
-	for(std::vector<std::string>::iterator it = splitted.begin(); it != splitted.end(); it++)
-	{
-		std::vector<std::string> tmp = split(*it, " ");
-		std::vector<std::string>::iterator ite = tmp.begin();
-		if(*ite == "CAP")
-			return;
-		else if (*ite == "PASS"){
-			if (*(ite + 1) == _password){
-				_clients[fd].setClientPass();
-				_clients[fd].SetIncrementInfo();
+	std::vector<std::string>::iterator it = splitted.begin();
+	it++;
+	if (_clients[fd].getClientRegistratedInfo() == false)
+		for(; it != splitted.end(); it++)
+		{
+			std::vector<std::string> tmp = split(*it, " ");
+			std::vector<std::string>::iterator ite = tmp.begin();
+			if (*ite == "PASS"){
+				if (*(ite + 1) == _password){
+					_clients[fd].setClientPass();
+					_clients[fd].SetIncrementInfo();
+				}
+				else {
+					send(fd, WrongPassword.c_str() , WrongPassword.size() , 0);
+				}
 			}
-			else {
-				send(fd, WrongPassword.c_str() , WrongPassword.size() , 0);
+			else if (*ite == "NICK"){
+				if(_clients[fd].getClientPass() == false)
+				{
+					send(fd, NoPassword.c_str() , NoPassword.size() , 0);
+					return;
+				}
+				else{
+					_clients[fd].setClientNickname(*(ite + 1));
+					_clients[fd].SetIncrementInfo();
+				}
 			}
-		}
-		else if (*ite == "NICK"){
-			if(_clients[fd].getClientPass() == false)
-			{
-				send(fd, NoPassword.c_str() , NoPassword.size() , 0);
-				return;
+			else if (*ite == "USER"){
+				if(_clients[fd].getClientPass() == false)
+				{
+					send(fd, NoPassword.c_str() , NoPassword.size() , 0);
+					return;
+				}
+				else{
+					std::cout << "hey" << std::endl;
+					_clients[fd].setClientUsername(*(ite + 1));
+					_clients[fd].SetIncrementInfo();
+				}
 			}
 			else{
-				_clients[fd].setClientNickname(*(ite + 1));
-				_clients[fd].SetIncrementInfo();
-			}
-		}
-		else if (*ite == "USER"){
-			if(_clients[fd].getClientPass() == false)
-			{
-				send(fd, NoPassword.c_str() , NoPassword.size() , 0);
-				return;
-			}
-			else{
-				_clients[fd].setClientUsername(*(ite + 1));
-				_clients[fd].SetIncrementInfo();
-			}
-		}
-		else{
 
-			std::string message = "Error : \"" + buff + "\"" + " is an unknown command. please register\r\n";
-			send(fd, message.c_str(), message.size(), 0);
+				std::string message = "Error : \"" + buff + "\"" + " is an unknown command. please register\r\n";
+				send(fd, message.c_str(), message.size(), 0);
+			}
+			std::cout << *ite<< std::endl;
 		}
-		std::cout << *ite<< std::endl;
-	}
 }
 void Server::ReceiveData(int fd){
 	char buff[1024];
@@ -209,12 +211,14 @@ void Server::ReceiveData(int fd){
 		ClearClients(fd);
 		close(fd);
  	}
-	else if (_clients[fd].getClientRegistratedInfo() == false){
+	else {
 		buff[bytes] = '\0';
 		registration(fd, buff);
+		std::cout << "CLient username = " << _clients[fd].getClientUserName() << std::endl; 
 		if (_clients[fd].getNumberInfo() == 2)
-			_clients[fd].setRegistrated();
+			_clients[fd].setRegistrated(true);
 	}
+
 }
 
 void Server::InitServ(char *port, std::string password){
