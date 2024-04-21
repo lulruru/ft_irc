@@ -3,7 +3,7 @@ CC = c++
 CFLAGS = -Wall -Wextra -Werror  -g -std=c++98
 OBJ_DIR = objs/
 
-SRC =	srcs/main.cpp srcs/Server.cpp srcs/Client.cpp
+SRC =	srcs/main.cpp srcs/Server.cpp srcs/Client.cpp srcs/cmd.cpp
 OBJ = $(addprefix $(OBJ_DIR), $(notdir $(SRC:.cpp=.o)))
 
 TOTAL_FILES := $(words $(SRC))

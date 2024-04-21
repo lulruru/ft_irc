@@ -60,6 +60,11 @@ void Server::SignalHandler(int signum)
 	_signal = true;
 }
 
+void Server::send_rpl(std::string rpl, int fd)
+{
+	send(fd, rpl.c_str(), rpl.size(), 0);
+}
+
 void Server::CloseFds()
 {
 	if(_clients.size() > 1)
@@ -167,14 +172,11 @@ void Server::registration(int fd, std::string buff)
 					_clients[fd].setClientPass();
 					_clients[fd].SetIncrementInfo();
 				}
-				else {
-					send(fd, WrongPassword.c_str() , WrongPassword.size() , 0);
-				}
 			}
 			else if (*ite == "NICK"){
 				if(_clients[fd].getClientPass() == false)
 				{
-					send(fd, NoPassword.c_str() , NoPassword.size() , 0);
+					// send(fd, NoPassword.c_str() , NoPassword.size() , 0);
 					return;
 				}
 				else{
@@ -182,18 +184,8 @@ void Server::registration(int fd, std::string buff)
 					_clients[fd].SetIncrementInfo();
 				}
 			}
-			else if (*ite == "USER"){
-				if(_clients[fd].getClientPass() == false)
-				{
-					send(fd, NoPassword.c_str() , NoPassword.size() , 0);
-					return;
-				}
-				else{
-					std::cout << "hey" << std::endl;
-					_clients[fd].setClientUsername(*(ite + 1));
-					_clients[fd].SetIncrementInfo();
-				}
-			}
+			else if (*ite == "USER")
+				cmd_user(tmp, fd);
 			else{
 
 				std::string message = "Error : \"" + buff + "\"" + " is an unknown command. please register\r\n";
@@ -217,6 +209,7 @@ void Server::ReceiveData(int fd){
 		buff[bytes] = '\0';
 		registration(fd, buff);
 		std::cout << "CLient username = " << _clients[fd].getClientUserName() << std::endl; 
+		std::cout << "BUFF = \"" << buff << "\"" << std::endl;
 		if (_clients[fd].getNumberInfo() == 2)
 			_clients[fd].setRegistrated(true);
 	}

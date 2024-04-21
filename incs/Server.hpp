@@ -29,7 +29,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-#include "ErrorMessage.hpp"
+#include "rpl.hpp"
 #include "map"
 
 
@@ -57,6 +57,12 @@ class Server
 	void registration(int fd, std::string buff);
 	void CloseFds();
 	void ClearClients(int fd);
+
+	//COMMAND HANDLER
+	void cmd_user(std::vector<std::string> command, int fd);
+	int cmd_used_username(std::string &name);
+
+	void send_rpl(std::string rpl, int fd);
 
 	private:
 	static bool _lock;
