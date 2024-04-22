@@ -136,7 +136,6 @@ void Server::NewClientAccept(){
 	_clients[incofd].setFd(incofd);
 	_clients[incofd].setIpAdd(inet_ntoa(clientAddr.sin_addr)) ;// convertit ip adress en string
 	_clients[incofd].setInfo(-1);
-	std::cout <<"test " <<  _clients[incofd].GetFd() << std::endl; 
 	_fds.push_back(pollStruct);
 	std::cout << "Client <" << incofd << "> Connected" << std::endl;
 }
@@ -156,32 +155,37 @@ std::vector<std::string> split(const std::string& s, const std::string& delimite
     return tokens;
 }
 
-void Server::registration(int fd, std::string buff){
-		{
-			std::vector<std::string> tmp = split(buff, " ");
-			std::vector<std::string>::iterator ite = tmp.begin();
-			if(*ite == "CAP"){
-				return ;
-			}
-			if (*ite == "PASS"){
-				if (*(ite + 1) == _password){
-					_clients[fd].setClientPass();
-					_clients[fd].SetIncrementInfo();
-					std::cout << " je suis rentre dans pass" << std::endl;
-				}
-			}
-			else if (*ite == "NICK")
-				cmd_nick(tmp, fd);
-			else if (*ite == "USER")
-				cmd_user(tmp, fd);
-			else{
+void Server::handle_cmd(int fd, std::string buff){
 
-				std::string message = "Error : \"" + buff + "\"" + " is an unknown command. please register\r\n";
-				send(fd, message.c_str(), message.size(), 0);
-			}
-			std::cout << "ite "<< *ite<< std::endl;
+	std::vector<std::string> tmp = split(buff, " ");
+	std::vector<std::string>::iterator ite = tmp.begin();
+	ptr_cmd_func ptrFunc = cmd_map[*ite];
+
+	if (cmd_map.find(*ite) != cmd_map.end()){
+		if (ptrFunc != NULL) 
+        	(this->*ptrFunc)(tmp, fd);
+	}
+	if(*ite == "CAP")
+		return ;
+	if (*ite == "PASS"){
+		if (*(ite + 1) == _password){
+			_clients[fd].setClientPass();
+			_clients[fd].SetIncrementInfo();
+			std::cout << " je suis rentre dans pass" << std::endl;
 		}
+	}
+	// else if (*ite == "NICK")
+	// 	cmd_nick(tmp, fd);
+	// else if (*ite == "USER")
+	// 	cmd_user(tmp, fd);
+	else{
+		std::string message = "Error : \"" + buff + "\"" + " is an unknown command. please register\r\n";
+		send(fd, message.c_str(), message.size(), 0);
+	}
+	std::cout << "ite "<< *ite<< std::endl;
+
 }
+
 void Server::ReceiveData(int fd){
 	char buff[1024];
 	memset(buff, 0, sizeof(buff));
@@ -200,12 +204,11 @@ void Server::ReceiveData(int fd){
 		std::vector<std::string>::iterator it = splitted.begin();
 		std::cout << "BUFF = \"" << buff << "\"" << std::endl;
 		for(; it != splitted.end(); it++){
-			registration(fd, *it);
+			handle_cmd(fd, *it);
 		}
-
 		std::cout << "CLient username = " << _clients[fd].getClientUserName() << std::endl;
 		// if (_clients[fd].getNumberInfo() == 2)
-			// _clients[fd].setRegistrated(true);
+		// 	_clients[fd].setRegistrated(true);
 	}
 
 }
@@ -216,6 +219,9 @@ void Server::InitServ(char *port, std::string password){
 	SocketCreator();
 	std::cout << "Server <" << _fdSocket << "> Connected" << std::endl;
 	std::cout << "Waiting to accept a connection...\n";
+	// cmd_map["PASS"] = &Server::cmd_pass;
+	cmd_map["NICK"] = &Server::cmd_nick;
+	cmd_map["USER"] = &Server::cmd_user;
 	while(Server::_signal == false)
 	{
 		if((poll(&_fds[0],_fds.size(), -1) == -1) && Server::_signal == false)

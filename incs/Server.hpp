@@ -33,6 +33,8 @@
 #include "map"
 
 
+
+
 class Server
 {
 	public:
@@ -46,7 +48,7 @@ class Server
     Server& operator=(Server const &rhs);
 
 	// Getters & Setters
-	
+	typedef void (Server::*ptr_cmd_func)(std::vector<std::string>, int);
 	// Méthodes
 	void InitServ(char *port, std::string password);
 	void SocketCreator();
@@ -54,13 +56,14 @@ class Server
  	void ReceiveData(int fd);
 	// void parsing_data(int fd);
 	static void SignalHandler(int signum);
-	void registration(int fd, std::string buff);
+	void handle_cmd(int fd, std::string buff);
 	void CloseFds();
 	void ClearClients(int fd);
 
 	//COMMAND HANDLER
 	void cmd_user(std::vector<std::string> command, int fd);
 	void cmd_nick(std::vector<std::string> command, int fd);
+	void cmd_pass(std::vector<std::string> command, int fd);
 	int cmd_used_name(std::string &name, int mode);
 
 	void send_rpl(std::string rpl, int fd);
@@ -72,5 +75,6 @@ class Server
 	int _fdSocket;
 	static bool _signal;
 	std::map<int, Client> _clients;
+	std::map<std::string, ptr_cmd_func> cmd_map;
 	std::vector<struct pollfd> _fds;
 };

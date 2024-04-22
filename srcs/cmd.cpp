@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cmd.cpp                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: russelenc <russelenc@student.42.fr>        +#+  +:+       +#+        */
+/*   By: rencarna <rencarna@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/04/21 19:30:35 by russelenc         #+#    #+#             */
-/*   Updated: 2024/04/22 11:53:15 by russelenc        ###   ########.fr       */
+/*   Updated: 2024/04/22 14:50:10 by rencarna         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,7 +34,7 @@ void Server::cmd_user(std::vector<std::string> command, int fd){
 	std::vector<std::string>::iterator it = command.begin();
 	std::string err = "localhost";
 	std::cout << "test" << std::endl;
-	if(command.size() < 1)
+	if(command.size() < 2)
 	{
 		std::string tmp = "USER";
 		send_rpl(ERR_NOTENOUGHPARAM(tmp), fd);
@@ -59,7 +59,7 @@ void Server::cmd_nick(std::vector<std::string> command, int fd){
 	std::vector<std::string>::iterator it = command.begin();
 	std::string err = "localhost";
 	// std::cout << "test" << std::endl;
-	if(command.size() < 1)
+	if(command.size() < 2)
 	{
 		std::string tmp = "USER";
 		send_rpl(ERR_NOTENOUGHPARAM(tmp), fd);
@@ -74,7 +74,10 @@ void Server::cmd_nick(std::vector<std::string> command, int fd){
 	else if((*(it + 1))[0] == '#')
 		send_rpl(ERR_ERRONEUSNICK(err), fd);
 	else{
-		// std::cout << "new fct " <<*(it+1) << std::endl;
 		_clients[fd].setClientNickname(*(it + 1));
 	}
 }
+
+// void Server::cmd_pass(std::vector<std::string> command, int fd){
+	
+// }
