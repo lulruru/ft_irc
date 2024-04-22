@@ -60,7 +60,8 @@ class Server
 
 	//COMMAND HANDLER
 	void cmd_user(std::vector<std::string> command, int fd);
-	int cmd_used_username(std::string &name);
+	void cmd_nick(std::vector<std::string> command, int fd);
+	int cmd_used_name(std::string &name, int mode);
 
 	void send_rpl(std::string rpl, int fd);
 

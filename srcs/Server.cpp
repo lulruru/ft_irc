@@ -156,34 +156,22 @@ std::vector<std::string> split(const std::string& s, const std::string& delimite
     return tokens;
 }
 
-void Server::registration(int fd, std::string buff)
-{
-	std::vector<std::string> splitted = split(buff, "\r\n");
-	std::cout << splitted.size() << std::endl;
-	std::vector<std::string>::iterator it = splitted.begin();
-	it++;
-	if (_clients[fd].getClientRegistratedInfo() == false)
-		for(; it != splitted.end(); it++)
+void Server::registration(int fd, std::string buff){
 		{
-			std::vector<std::string> tmp = split(*it, " ");
+			std::vector<std::string> tmp = split(buff, " ");
 			std::vector<std::string>::iterator ite = tmp.begin();
+			if(*ite == "CAP"){
+				return ;
+			}
 			if (*ite == "PASS"){
 				if (*(ite + 1) == _password){
 					_clients[fd].setClientPass();
 					_clients[fd].SetIncrementInfo();
+					std::cout << " je suis rentre dans pass" << std::endl;
 				}
 			}
-			else if (*ite == "NICK"){
-				if(_clients[fd].getClientPass() == false)
-				{
-					// send(fd, NoPassword.c_str() , NoPassword.size() , 0);
-					return;
-				}
-				else{
-					_clients[fd].setClientNickname(*(ite + 1));
-					_clients[fd].SetIncrementInfo();
-				}
-			}
+			else if (*ite == "NICK")
+				cmd_nick(tmp, fd);
 			else if (*ite == "USER")
 				cmd_user(tmp, fd);
 			else{
@@ -191,7 +179,7 @@ void Server::registration(int fd, std::string buff)
 				std::string message = "Error : \"" + buff + "\"" + " is an unknown command. please register\r\n";
 				send(fd, message.c_str(), message.size(), 0);
 			}
-			std::cout << *ite<< std::endl;
+			std::cout << "ite "<< *ite<< std::endl;
 		}
 }
 void Server::ReceiveData(int fd){
@@ -207,11 +195,17 @@ void Server::ReceiveData(int fd){
  	}
 	else {
 		buff[bytes] = '\0';
-		registration(fd, buff);
-		std::cout << "CLient username = " << _clients[fd].getClientUserName() << std::endl; 
+		std::vector<std::string> splitted = split(buff, "\r\n");
+		std::cout << "CMD SIZE = " <<splitted.size() << std::endl;
+		std::vector<std::string>::iterator it = splitted.begin();
 		std::cout << "BUFF = \"" << buff << "\"" << std::endl;
-		if (_clients[fd].getNumberInfo() == 2)
-			_clients[fd].setRegistrated(true);
+		for(; it != splitted.end(); it++){
+			registration(fd, *it);
+		}
+
+		std::cout << "CLient username = " << _clients[fd].getClientUserName() << std::endl;
+		// if (_clients[fd].getNumberInfo() == 2)
+			// _clients[fd].setRegistrated(true);
 	}
 
 }
